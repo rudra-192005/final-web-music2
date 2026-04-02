@@ -65,7 +65,7 @@ const TRACKS = [
     id: 13, title: "Sitaare", artist: "BOLLYWOOD", album: "Sitaare",
     year: 2024, duration: "3:30", durationSec: 210, genre: "Bollywood",
     emoji: "⭐", color: "#ffd700", bg: "linear-gradient(135deg, #2a1a00, #1a1000)", liked: false,
-    src: "./public/Sitaare.mp3""./public/Sitaare.mp3",
+   src: "./public/Sitaare.mp3",",
   }
 ];
 
