@@ -182,16 +182,16 @@ const TRACKS = [
     color: "#ffd700",
     bg: "linear-gradient(135deg, #2a1a00, #1a1000)",
     liked: false,
-    src: "./Sitaare.mp3",
-  } // Added missing closing brace here
-]; // Added missing closing bracket here
+    src: "../Sitaare.mp3", // Looks one folder up because this file is inside /scripts
+  }
+];
 
 const PLAYLISTS = [
   {
     id: 1,
     name: "Late Night Drives",
     description: "Dark synthwave for empty roads",
-    trackIds: [1, 7, 3, 8, 13], // Added 13 to show it in a playlist
+    trackIds: [1, 7, 3, 8, 13], // Sitaare added here
     color: "#e8ff47",
     tag: "Synthwave",
     tagColor: "rgba(232,255,71,0.15)",
@@ -231,7 +231,7 @@ const PLAYLISTS = [
     id: 5,
     name: "My Favorites",
     description: "All the songs I love",
-    trackIds: [2, 5, 8, 11, 13], // Added 13 here as well
+    trackIds: [2, 5, 8, 11, 13], // Sitaare added here
     color: "#ff9947",
     tag: "Mixed",
     tagColor: "rgba(255,153,71,0.15)",
@@ -249,7 +249,49 @@ const PLAYLISTS = [
   },
 ];
 
-// ... (USER and appState objects remain the same)
+const USER = {
+  name: "Alex Rivera",
+  handle: "@alexbeats",
+  avatar: "🎧",
+  joined: "March 2022",
+  totalPlays: 8472,
+  hoursListened: 412,
+  likedSongs: 89,
+  playlists: 6,
+  topArtists: [
+    { name: "NEON PULSE", plays: 284, emoji: "🌙", color: "#e8ff47" },
+    { name: "CHROME WAVE", plays: 201, emoji: "⚡", color: "#47c8ff" },
+    { name: "ORBIT SOUND", plays: 178, emoji: "🪐", color: "#ff9947" },
+    { name: "DREAMSCAPE", plays: 156, emoji: "🌌", color: "#c8a0ff" },
+    { name: "VAPOR ECHO", plays: 134, emoji: "🌧️", color: "#a0a8ff" },
+  ],
+  genreBreakdown: [
+    { genre: "Synthwave", pct: 38, color: "#e8ff47" },
+    { genre: "Electronic", pct: 28, color: "#47c8ff" },
+    { genre: "Ambient", pct: 18, color: "#ff9947" },
+    { genre: "Dream Pop", pct: 10, color: "#c8a0ff" },
+    { genre: "Techno", pct: 6, color: "#ff4e6a" },
+  ],
+  recentActivity: [
+    { text: "Liked <strong>Glass Rain</strong> by VAPOR ECHO", time: "2h ago", color: "#ff4e6a" },
+    { text: "Added <strong>Midnight Drive</strong> to Late Night Drives", time: "5h ago", color: "#e8ff47" },
+    { text: "Followed <strong>CHROME WAVE</strong>", time: "Yesterday", color: "#47c8ff" },
+    { text: "Created playlist <strong>Dream State</strong>", time: "2 days ago", color: "#c8a0ff" },
+    { text: "Liked <strong>Aurora Kiss</strong> by DREAMSCAPE", time: "3 days ago", color: "#ff4e6a" },
+  ],
+};
+
+// App State
+const appState = {
+  currentTrackIndex: 0,
+  queue: [...TRACKS],
+  isPlaying: false,
+  isShuffle: false,
+  repeatMode: 0, // 0=off, 1=all, 2=one
+  volume: 0.7,
+  progress: 0,
+  progressTimer: null,
+};
 
 // Get track by ID
 function getTrack(id) {
@@ -267,8 +309,6 @@ function saveState() {
       volume: appState.volume,
       progress: appState.progress,
     }));
-    // Note: If you want manually updated playlists to show up, 
-    // you may want to clear localStorage once or handle this merge carefully.
     localStorage.setItem('sonix_playlists', JSON.stringify(PLAYLISTS));
     localStorage.setItem('sonix_liked', JSON.stringify(TRACKS.map(t => ({ id: t.id, liked: t.liked }))));
   } catch(e) {}
@@ -284,11 +324,13 @@ function loadState() {
     const liked = localStorage.getItem('sonix_liked');
     if (liked) {
       JSON.parse(liked).forEach(item => {
-        const t = TRACKS.find(t => t.id === item.id);
+        const t = TRACKS.find(track => track.id === item.id);
         if (t) t.liked = item.liked;
       });
     }
-  } catch(e) {}
+  } catch(e) {
+    console.error("Failed to load state:", e);
+  }
 }
 
 loadState();
