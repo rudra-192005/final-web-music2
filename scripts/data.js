@@ -169,22 +169,7 @@ const TRACKS = [
     bg: "linear-gradient(135deg, #1a1200, #0d0d00)",
     liked: false,
   },
-  {
-    id: 13,
-    title: "Sitaare",
-    artist: "BOLLYWOOD",
-    album: "Sitaare",
-    year: 2024,
-    duration: "3:30",
-    durationSec: 210,
-    genre: "Bollywood",
-    emoji: "⭐",
-    color: "#ffd700",
-    bg: "linear-gradient(135deg, #2a1a00, #1a1000)",
-    liked: false,
-    src: "https://bajaao.pendujatt.com.se/load/320/70314451/2138233/Sitaare.mp3",
-  },
-];
+ // https://bajaao.pendujatt.com.se/load/320/70314451/2138233/Sitaare.mp3
 
 const PLAYLISTS = [
   {
