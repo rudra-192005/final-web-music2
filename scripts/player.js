@@ -2,6 +2,27 @@
 
 let _progress = appState.progress || 0;
 let _progressTimer = null;
+let _audio = null;
+
+function getOrCreateAudio(src) {
+  if (!_audio) {
+    _audio = new Audio();
+    _audio.crossOrigin = "anonymous";
+    _audio.addEventListener('timeupdate', () => {
+      if (_audio.duration) {
+        _progress = (_audio.currentTime / _audio.duration) * 100;
+        appState.progress = _progress;
+        updateProgressUI();
+      }
+    });
+    _audio.addEventListener('ended', () => { _progress = 0; nextTrack(); });
+  }
+  if (_audio.src !== src) {
+    _audio.src = src;
+    _audio.load();
+  }
+  return _audio;
+}
 
 function togglePlay() {
   appState.isPlaying = !appState.isPlaying;
@@ -17,16 +38,23 @@ function startProgress() {
   stopProgress();
   const track = appState.queue[appState.currentTrackIndex];
   if (!track) return;
-  _progressTimer = setInterval(() => {
-    _progress += (100 / track.durationSec) * 0.1;
-    if (_progress >= 100) { _progress = 0; nextTrack(); return; }
-    appState.progress = _progress;
-    updateProgressUI();
-  }, 100);
+  if (track.src) {
+    const audio = getOrCreateAudio(track.src);
+    audio.volume = appState.volume;
+    audio.play().catch(() => {});
+  } else {
+    _progressTimer = setInterval(() => {
+      _progress += (100 / track.durationSec) * 0.1;
+      if (_progress >= 100) { _progress = 0; nextTrack(); return; }
+      appState.progress = _progress;
+      updateProgressUI();
+    }, 100);
+  }
 }
 
 function stopProgress() {
   if (_progressTimer) { clearInterval(_progressTimer); _progressTimer = null; }
+  if (_audio && !_audio.paused) { _audio.pause(); }
 }
 
 function updateProgressUI() {
@@ -48,6 +76,9 @@ function seekBar(event) {
   const rect = bar.getBoundingClientRect();
   _progress = Math.max(0, Math.min(100, ((event.clientX - rect.left) / rect.width) * 100));
   appState.progress = _progress;
+  if (_audio && _audio.duration) {
+    _audio.currentTime = (_progress / 100) * _audio.duration;
+  }
   updateProgressUI();
 }
 
@@ -89,6 +120,7 @@ function setVol(event) {
   if (!bar) return;
   const rect = bar.getBoundingClientRect();
   appState.volume = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
+  if (_audio) _audio.volume = appState.volume;
   const fill = document.getElementById('volFill');
   if (fill) fill.style.width = (appState.volume * 100) + '%';
   saveState();
