@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SONIX — Playlists</title>
+  <link rel="stylesheet" href="styles/global.css"/>
+</head>
+<body>
+<div class="app-layout">
+  <div id="sidebarMount"></div>
+
+  <div class="main-area">
+    <div class="topbar" id="topbar">
+      <div class="topbar-left">
+        <button class="nav-arrow" onclick="history.back()">‹</button>
+        <button class="nav-arrow" onclick="history.forward()">›</button>
+      </div>
+      <div class="topbar-right">
+        <button class="user-btn"><div class="user-av">A</div><span class="user-lbl">Alex Rivera</span></button>
+      </div>
+    </div>
+
+    <div class="page-scroll" id="pageScroll">
+
+      <!-- Grid View -->
+      <div id="gridView">
+        <div class="section-head" style="margin-top:16px;">
+          <h2 class="section-title">Your Playlists</h2>
+          <button class="btn-play-big" onclick="openCreateModal()" title="New playlist" style="width:40px;height:40px;font-size:18px;">+</button>
+        </div>
+        <div class="card-grid" id="plGrid"></div>
+      </div>
+
+      <!-- Detail View -->
+      <div id="detailView" style="display:none;">
+        <button onclick="showGrid()" style="background:none;border:none;color:var(--text-muted);font-size:13px;font-weight:700;font-family:var(--font);cursor:pointer;display:flex;align-items:center;gap:6px;padding:16px 0 0;transition:color 0.2s;" onmouseover="this.style.color='var(--text-primary)'" onmouseout="this.style.color='var(--text-muted)'">‹ Back</button>
+        <div id="detailContent"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="playerMount"></div>
+</div>
+
+<!-- Create Modal -->
+<div class="modal-overlay" id="createModal" onclick="closeModalBg(event)">
+  <div class="modal-box">
+    <div class="modal-title">Create playlist</div>
+    <input type="text" class="modal-input" id="plNameInput" placeholder="My Playlist #1"/>
+    <input type="text" class="modal-input" id="plDescInput" placeholder="Add an optional description"/>
+    <div class="modal-acts">
+      <button class="btn-cancel-m" onclick="closeModal()">Cancel</button>
+      <button class="btn-create-m" onclick="createPlaylist()">Create</button>
+    </div>
+  </div>
+</div>
+
+<script src="scripts/data.js"></script>
+<script src="scripts/layout.js"></script>
+<script src="scripts/player.js"></script>
+<script>
+let localPlaylists = JSON.parse(JSON.stringify(PLAYLISTS));
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('sidebarMount').innerHTML = renderSidebar('playlists');
+  document.getElementById('playerMount').innerHTML = renderPlayerBar();
+
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('id');
+  if (id) showDetail(parseInt(id));
+  else renderGrid();
+});
+
+function renderGrid() {
+  document.getElementById('plGrid').innerHTML = localPlaylists.map((pl, i) => {
+    const tracks = pl.trackIds.map(id => TRACKS.find(t=>t.id===id)).filter(Boolean);
+    const emojis = tracks.slice(0,4).map(t=>t.emoji);
+    while (emojis.length < 4) emojis.push('🎵');
+    return `
+    <div class="music-card fade-up" style="animation-delay:${i*0.05}s" onclick="showDetail(${pl.id})">
+      <div class="card-art" style="padding:0;border-radius:var(--radius-sm);overflow:hidden;display:grid;grid-template-columns:1fr 1fr;gap:2px;font-size:32px;">
+        ${emojis.map(e=>`<div style="background:var(--bg-card);display:flex;align-items:center;justify-content:center;aspect-ratio:1;">${e}</div>`).join('')}
+        <button class="card-play" onclick="event.stopPropagation();playPl(${pl.id})" style="position:absolute;bottom:8px;right:8px;">▶</button>
+      </div>
+      <div class="card-title">${pl.name}</div>
+      <div class="card-sub">${pl.description}</div>
+    </div>`;
+  }).join('');
+}
+
+function showDetail(id) {
+  const pl = localPlaylists.find(p=>p.id===id);
+  if (!pl) return;
+  document.getElementById('gridView').style.display = 'none';
+  document.getElementById('detailView').style.display = 'block';
+
+  const tracks = pl.trackIds.map(tid => TRACKS.find(t=>t.id===tid)).filter(Boolean);
+  const emojis = tracks.slice(0,4).map(t=>t.emoji);
+  while (emojis.length < 4) emojis.push('🎵');
+
+  const totalSec = tracks.reduce((a,t)=>a+t.durationSec,0);
+  const hrs = Math.floor(totalSec/3600);
+  const mins = Math.floor((totalSec%3600)/60);
+  const durStr = hrs > 0 ? `${hrs} hr ${mins} min` : `${mins} min`;
+
+  document.getElementById('detailContent').innerHTML = `
+    <div class="page-hero" style="--hero-color:${hexToRgb(pl.color)}; margin:0 -24px; padding:32px 24px 28px; margin-bottom:24px;">
+      <div class="pl-hero-wrap">
+        <div class="pl-hero-art">
+          ${emojis.map(e=>`<div class="pl-hero-cell">${e}</div>`).join('')}
+        </div>
+        <div>
+          <div class="hero-label">Playlist</div>
+          <h1 class="hero-h1">${pl.name}</h1>
+          <div class="hero-sub">
+            <span style="color:var(--text-primary);font-weight:700;">Alex Rivera</span>
+            <span class="hero-dot"></span>
+            <span>${tracks.length} songs, ${durStr}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-actions" style="margin-bottom:24px; padding:0 0;">
+      <button class="btn-play-big" onclick="playPl(${pl.id})">▶</button>
+      <button class="btn-ghost" onclick="shufflePl(${pl.id})">⇄ Shuffle</button>
+      <button class="btn-icon">•••</button>
+    </div>
+
+    <div class="tl-head">
+      <div class="tl-col">#</div>
+      <div class="tl-col">Title</div>
+      <div class="tl-col">Album</div>
+      <div class="tl-col">♡</div>
+      <div class="tl-col right">⏱</div>
+    </div>
+    ${tracks.map((track, i) => `
+    <div class="track-row" ondblclick="playTrackFromPl(${track.id}, ${pl.id})">
+      <div class="tr-num-wrap">
+        <span class="tr-num">${i+1}</span>
+        <span class="tr-play-ico">▶</span>
+      </div>
+      <div class="tr-info">
+        <div class="tr-thumb" style="background:linear-gradient(135deg,${track.color}44,${track.color}11)">${track.emoji}</div>
+        <div>
+          <div class="tr-title">${track.title}</div>
+          <div class="tr-artist">${track.artist}</div>
+        </div>
+      </div>
+      <div class="tr-album">${track.album}</div>
+      <button class="track-like ${track.liked?'liked':''}" onclick="likeT(event,${track.id})">${track.liked?'♥':'♡'}</button>
+      <div class="tr-dur">${track.duration}</div>
+    </div>`).join('')}
+  `;
+}
+
+function hexToRgb(hex) {
+  if (!hex || hex.length < 7) return '#1d4b3e';
+  const r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+  return `rgb(${Math.round(r*0.12)},${Math.round(g*0.25)},${Math.round(b*0.2)})`;
+}
+
+function showGrid() {
+  document.getElementById('gridView').style.display = 'block';
+  document.getElementById('detailView').style.display = 'none';
+  renderGrid();
+}
+
+function playPl(id) {
+  const pl = localPlaylists.find(p=>p.id===id);
+  if (!pl) return;
+  appState.queue = pl.trackIds.map(i=>TRACKS.find(t=>t.id===i)).filter(Boolean);
+  appState.currentTrackIndex = 0; appState.isPlaying = true;
+  saveState(); window.location.href = 'index.html';
+}
+
+function shufflePl(id) {
+  const pl = localPlaylists.find(p=>p.id===id);
+  if (!pl) return;
+  const tracks = pl.trackIds.map(i=>TRACKS.find(t=>t.id===i)).filter(Boolean);
+  appState.queue = [...tracks].sort(()=>Math.random()-0.5);
+  appState.currentTrackIndex = 0; appState.isPlaying = true; appState.isShuffle = true;
+  saveState(); window.location.href = 'index.html';
+}
+
+function playTrackFromPl(trackId, plId) {
+  const pl = localPlaylists.find(p=>p.id===plId);
+  if (!pl) return;
+  appState.queue = pl.trackIds.map(i=>TRACKS.find(t=>t.id===i)).filter(Boolean);
+  appState.currentTrackIndex = appState.queue.findIndex(t=>t.id===trackId);
+  appState.isPlaying = true; saveState(); window.location.href = 'index.html';
+}
+
+function likeT(e, id) {
+  e.stopPropagation();
+  const t = TRACKS.find(t=>t.id===id); if (!t) return;
+  t.liked = !t.liked;
+  e.currentTarget.textContent = t.liked ? '♥' : '♡';
+  e.currentTarget.classList.toggle('liked', t.liked);
+  e.currentTarget.style.opacity = '1';
+  saveState();
+}
+
+function openCreateModal() { document.getElementById('createModal').classList.add('open'); setTimeout(()=>document.getElementById('plNameInput').focus(),200); }
+function closeModal() { document.getElementById('createModal').classList.remove('open'); }
+function closeModalBg(e) { if(e.target===document.getElementById('createModal')) closeModal(); }
+
+const COLORS = ["#1ed9b4","#f5a623","#e8445a","#8b5cf6","#3b82f6","#22c55e"];
+const TAGS = ["Electronic","Pop","Rock","Hip-Hop","Jazz","Classical"];
+
+function createPlaylist() {
+  const name = document.getElementById('plNameInput').value.trim();
+  if (!name) return;
+  const desc = document.getElementById('plDescInput').value.trim() || 'A new playlist';
+  const idx = localPlaylists.length % COLORS.length;
+  localPlaylists.push({ id: Date.now(), name, description: desc, trackIds: [], color: COLORS[idx], tag: TAGS[idx], tagColor: COLORS[idx]+'22', tagTextColor: COLORS[idx] });
+  closeModal();
+  document.getElementById('plNameInput').value = ''; document.getElementById('plDescInput').value = '';
+  renderGrid();
+}
+</script>
+</body>
+</html>

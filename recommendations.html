@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SONIX — Discover</title>
+  <link rel="stylesheet" href="styles/global.css"/>
+</head>
+<body>
+<div class="sidebar-overlay" onclick="closeMobileSidebar()"></div>
+<div class="app-layout">
+  <div id="sidebarMount"></div>
+
+  <div class="main-area">
+    <div class="topbar" id="topbar">
+      <div class="topbar-left">
+        <button class="mobile-menu-btn" onclick="toggleSidebar()" aria-label="Menu">☰</button>
+        <button class="nav-arrow" onclick="history.back()">‹</button>
+        <button class="nav-arrow" onclick="history.forward()">›</button>
+      </div>
+      <div class="topbar-search">
+        <span class="search-icon-label">🔍</span>
+        <input class="search-input" id="searchInput" type="text" placeholder="Browse genres, artists, moods..." oninput="filterRecs(this.value)"/>
+      </div>
+      <div class="topbar-right">
+        <button class="user-btn"><div class="user-av">A</div><span class="user-lbl">Alex Rivera</span></button>
+      </div>
+    </div>
+
+    <div class="page-scroll" id="pageScroll">
+
+      <!-- Hero -->
+      <div class="page-hero" style="--hero-color: rgb(10, 28, 40);">
+        <div class="hero-label">Discover</div>
+        <h1 class="hero-h1">Made for you</h1>
+        <div class="hero-sub">Personalized picks based on your listening history</div>
+        <!-- Genre Filter Pills -->
+        <div class="genre-pills" id="genrePills"></div>
+      </div>
+
+      <!-- Daily Mix cards -->
+      <div class="section-head">
+        <h2 class="section-title">Daily Mix</h2>
+      </div>
+      <div class="card-grid" id="dailyMix"></div>
+
+      <!-- Because you listened to -->
+      <div class="section-head">
+        <h2 class="section-title" id="becauseTitle">Because you listened to NEON PULSE</h2>
+      </div>
+      <div class="card-grid" id="becauseGrid"></div>
+
+      <!-- Trending in genre -->
+      <div class="section-head">
+        <h2 class="section-title" id="trendingTitle">Trending in Synthwave</h2>
+      </div>
+      <div class="card-grid" id="trendingGrid"></div>
+
+      <!-- Hidden Gems tracklist -->
+      <div class="section-head">
+        <h2 class="section-title">Hidden Gems</h2>
+        <button class="show-all-btn">Show all</button>
+      </div>
+      <div class="tl-head">
+        <div class="tl-col">#</div>
+        <div class="tl-col">Title</div>
+        <div class="tl-col">Genre</div>
+        <div class="tl-col">Match</div>
+        <div class="tl-col right">⏱</div>
+      </div>
+      <div id="gemsList"></div>
+
+    </div>
+  </div>
+
+  <div id="playerMount"></div>
+  <div id="bottomNavMount"></div>
+</div>
+
+<div class="modal-overlay" id="createModal" onclick="closeModalBg(event)">
+  <div class="modal-box">
+    <div class="modal-title">Create playlist</div>
+    <input type="text" class="modal-input" id="plNameInput" placeholder="My Playlist #1"/>
+    <div class="modal-acts">
+      <button class="btn-cancel-m" onclick="closeModal()">Cancel</button>
+      <button class="btn-create-m" onclick="closeModal()">Create</button>
+    </div>
+  </div>
+</div>
+
+<script src="scripts/data.js"></script>
+<script src="scripts/layout.js"></script>
+<script src="scripts/player.js"></script>
+<script>
+const REC_TRACKS = [
+  { id:101, title:"Neon Highway", artist:"VOLTAGE RUSH", genre:"Synthwave", emoji:"🛣️", color:"#e8ff47", matchPct:97, tags:["Synthwave","Dark"], similarTo:"NEON PULSE", duration:"3:28", durationSec:208 },
+  { id:102, title:"After Hours Protocol", artist:"GHOST NET", genre:"Synthwave", emoji:"🌃", color:"#a0a8ff", matchPct:94, tags:["Synthwave","Atmospheric"], similarTo:"NEON PULSE", duration:"4:12", durationSec:252 },
+  { id:103, title:"Cascade Loop", artist:"SIGNAL LOSS", genre:"Electronic", emoji:"🔄", color:"#47c8ff", matchPct:91, tags:["Electronic","Glitch"], similarTo:"CHROME WAVE", duration:"3:55", durationSec:235 },
+  { id:104, title:"Void Garden", artist:"TERRA NULL", genre:"Ambient", emoji:"🌿", color:"#47ffb8", matchPct:88, tags:["Ambient","Organic"], similarTo:"ORBIT SOUND", duration:"5:44", durationSec:344 },
+  { id:105, title:"Static Dream", artist:"MEMBRANE", genre:"Dream Pop", emoji:"☁️", color:"#c8a0ff", matchPct:85, tags:["Dream Pop","Soft"], similarTo:"DREAMSCAPE", duration:"4:01", durationSec:241 },
+  { id:106, title:"Datamosh", artist:"BIT DECAY", genre:"Electronic", emoji:"📡", color:"#ff9947", matchPct:82, tags:["Electronic","Experimental"], similarTo:"SYNTAX ERR", duration:"3:44", durationSec:224 },
+  { id:107, title:"Phase Shift", artist:"QUANTUM BASS", genre:"Techno", emoji:"🎛️", color:"#ff4e6a", matchPct:79, tags:["Techno","Hard"], similarTo:"BASSLINE", duration:"6:22", durationSec:382 },
+  { id:108, title:"Carbon Echo", artist:"THERMAL DRIFT", genre:"Ambient", emoji:"💨", color:"#a0e8ff", matchPct:76, tags:["Ambient","Drone"], similarTo:"VAPOR ECHO", duration:"7:15", durationSec:435 },
+  { id:109, title:"Retrowave City", artist:"OUTRUN X", genre:"Synthwave", emoji:"🏙️", color:"#ff47c8", matchPct:95, tags:["Synthwave","Retro"], similarTo:"NEON PULSE", duration:"3:33", durationSec:213 },
+  { id:110, title:"Frequency Bath", artist:"WAVE POOL", genre:"Ambient", emoji:"🌊", color:"#47c8e8", matchPct:87, tags:["Ambient","Meditative"], similarTo:"ORBIT SOUND", duration:"8:01", durationSec:481 },
+  { id:111, title:"Neon Dusk", artist:"PRISM CUT", genre:"Synthwave", emoji:"🌆", color:"#ffcc47", matchPct:92, tags:["Synthwave","Melodic"], similarTo:"NEON PULSE", duration:"4:19", durationSec:259 },
+  { id:112, title:"Electric Bloom", artist:"CURRENT WAVE", genre:"Electronic", emoji:"🌺", color:"#47ffa0", matchPct:83, tags:["Electronic","Uplifting"], similarTo:"CHROME WAVE", duration:"3:51", durationSec:231 },
+];
+
+const GENRES = ['All', 'Synthwave', 'Electronic', 'Ambient', 'Dream Pop', 'Techno'];
+let activeGenre = 'All';
+let liked = {};
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('sidebarMount').innerHTML = renderSidebar('discover');
+  document.getElementById('playerMount').innerHTML = renderPlayerBar();
+  document.getElementById('bottomNavMount').innerHTML = renderBottomNav('discover');
+  renderPills();
+  renderAll();
+});
+
+function renderPills() {
+  document.getElementById('genrePills').innerHTML = GENRES.map(g => `
+    <button class="g-pill ${g===activeGenre?'active':''}" onclick="setGenre('${g}')">${g}</button>
+  `).join('');
+}
+
+function setGenre(g) { activeGenre = g; renderPills(); renderAll(); }
+
+function getFiltered() {
+  if (activeGenre === 'All') return REC_TRACKS;
+  return REC_TRACKS.filter(t => t.genre === activeGenre);
+}
+
+function renderAll() {
+  const filtered = getFiltered();
+  const topArtist = USER.topArtists[0].name;
+  const topGenre = USER.genreBreakdown[0].genre;
+
+  document.getElementById('becauseTitle').textContent = `Because you listened to ${topArtist}`;
+  document.getElementById('trendingTitle').textContent = `Trending in ${topGenre}`;
+
+  // Daily Mix (random selection)
+  const daily = [...filtered].sort(() => Math.random() - 0.5).slice(0, 6);
+  renderCards('dailyMix', daily, true);
+
+  // Because you listened to
+  const because = filtered.filter(t => t.similarTo === topArtist).slice(0, 6);
+  renderCards('becauseGrid', because.length ? because : filtered.slice(0, 6));
+
+  // Trending in genre
+  const trending = filtered.filter(t => t.genre === topGenre).slice(0, 6);
+  renderCards('trendingGrid', trending.length ? trending : filtered.slice(2, 8));
+
+  // Hidden gems tracklist
+  const gems = [...filtered].sort((a,b) => a.matchPct - b.matchPct).slice(0, 8);
+  renderGemsList(gems);
+}
+
+function renderCards(containerId, tracks, showBadge = false) {
+  const el = document.getElementById(containerId);
+  if (!tracks.length) {
+    el.innerHTML = '<div style="color:var(--text-muted);font-size:13px;grid-column:1/-1;padding:16px 0;">No tracks for this filter.</div>';
+    return;
+  }
+  el.innerHTML = tracks.map((track, i) => `
+    <div class="music-card fade-up" style="animation-delay:${i*0.05}s" onclick="playRec(${track.id})">
+      <div class="card-art" style="background:linear-gradient(135deg,${track.color}44,${track.color}11); position:relative;">
+        ${track.emoji}
+        ${showBadge ? `<div class="rec-badge">${track.matchPct}%</div>` : ''}
+        <button class="card-play" onclick="event.stopPropagation();playRec(${track.id})">▶</button>
+      </div>
+      <div class="card-title">${track.title}</div>
+      <div class="card-sub">${track.artist} · ${track.genre}</div>
+    </div>
+  `).join('');
+}
+
+function renderGemsList(tracks) {
+  document.getElementById('gemsList').innerHTML = tracks.map((track, i) => `
+    <div class="track-row" ondblclick="playRec(${track.id})">
+      <div class="tr-num-wrap">
+        <span class="tr-num">${i+1}</span>
+        <span class="tr-play-ico">▶</span>
+      </div>
+      <div class="tr-info">
+        <div class="tr-thumb" style="background:linear-gradient(135deg,${track.color}44,${track.color}11)">${track.emoji}</div>
+        <div>
+          <div class="tr-title">${track.title}</div>
+          <div class="tr-artist">${track.artist}</div>
+        </div>
+      </div>
+      <div class="tr-album">${track.genre}</div>
+      <button class="track-like ${liked[track.id]?'liked':''}" onclick="likeRec(event,${track.id})">${liked[track.id]?'♥':'♡'}</button>
+      <div class="tr-dur">${track.duration}</div>
+    </div>
+  `).join('');
+}
+
+function filterRecs(q) {
+  q = q.toLowerCase().trim();
+  if (!q) { renderAll(); return; }
+  const filtered = REC_TRACKS.filter(t =>
+    t.title.toLowerCase().includes(q) ||
+    t.artist.toLowerCase().includes(q) ||
+    t.genre.toLowerCase().includes(q)
+  );
+  renderCards('becauseGrid', filtered);
+  renderCards('trendingGrid', filtered.slice(0,6));
+}
+
+function playRec(id) {
+  const track = REC_TRACKS.find(t => t.id === id);
+  if (!track) return;
+  const qt = { ...track, album: 'Recommended', year: 2024, liked: false, bg: '' };
+  appState.queue = [qt, ...appState.queue];
+  appState.currentTrackIndex = 0;
+  appState.isPlaying = true;
+  saveState();
+  window.location.href = 'index.html';
+}
+
+function likeRec(e, id) {
+  e.stopPropagation();
+  liked[id] = !liked[id];
+  e.currentTarget.textContent = liked[id] ? '♥' : '♡';
+  e.currentTarget.classList.toggle('liked', liked[id]);
+  e.currentTarget.style.opacity = '1';
+}
+
+function openCreateModal() { document.getElementById('createModal').classList.add('open'); }
+function closeModal() { document.getElementById('createModal').classList.remove('open'); }
+function closeModalBg(e) { if(e.target===document.getElementById('createModal')) closeModal(); }
+</script>
+</body>
+</html>

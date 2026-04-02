@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SONIX — Profile</title>
+  <link rel="stylesheet" href="styles/global.css"/>
+</head>
+<body>
+<div class="sidebar-overlay" onclick="closeMobileSidebar()"></div>
+<div class="app-layout">
+  <div id="sidebarMount"></div>
+
+  <div class="main-area">
+    <div class="topbar" id="topbar">
+      <div class="topbar-left">
+        <button class="mobile-menu-btn" onclick="toggleSidebar()" aria-label="Menu">☰</button>
+        <button class="nav-arrow" onclick="history.back()">‹</button>
+        <button class="nav-arrow" onclick="history.forward()">›</button>
+      </div>
+      <div class="topbar-right">
+        <button class="user-btn" onclick="window.location.href='userdata.html'"><div class="user-av">A</div><span class="user-lbl">Alex Rivera</span></button>
+      </div>
+    </div>
+
+    <div class="page-scroll" id="pageScroll">
+
+      <!-- Profile Hero -->
+      <div class="page-hero" style="--hero-color: rgb(20,36,56);">
+        <div style="display:flex; gap:24px; align-items:flex-end; padding-bottom:8px;">
+          <div style="width:200px;height:200px;border-radius:50%;background:linear-gradient(135deg,#1ed9b4,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:72px;box-shadow:0 16px 48px rgba(0,0,0,0.6);flex-shrink:0;">🎧</div>
+          <div>
+            <div class="hero-label">Profile</div>
+            <h1 class="hero-h1">Alex Rivera</h1>
+            <div class="hero-sub">
+              <span style="color:var(--text-primary);font-weight:600;" id="plCount">6 public playlists</span>
+              <span class="hero-dot"></span>
+              <span id="follCount">412 followers</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats Row -->
+      <div class="stats-grid">
+        <div class="stat-tile">
+          <div class="stat-n" style="color:var(--accent);">8,472</div>
+          <div class="stat-l">Total Plays</div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-n">412h</div>
+          <div class="stat-l">Hours Listened</div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-n" id="likedCount">—</div>
+          <div class="stat-l">Liked Songs</div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-n">6</div>
+          <div class="stat-l">Playlists</div>
+        </div>
+      </div>
+
+      <!-- Two column content -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:32px;">
+
+        <!-- Top Artists -->
+        <div>
+          <div class="section-head" style="margin-top:0;">
+            <h2 class="section-title" style="font-size:18px;">Top artists this month</h2>
+          </div>
+          <div id="topArtistsList"></div>
+        </div>
+
+        <!-- Genre Breakdown -->
+        <div>
+          <div class="section-head" style="margin-top:0;">
+            <h2 class="section-title" style="font-size:18px;">Listening by genre</h2>
+          </div>
+          <div id="genreBreakdown"></div>
+        </div>
+      </div>
+
+      <!-- Listening Activity Heatmap -->
+      <div style="background:var(--bg-elevated);border-radius:var(--radius-md);padding:24px;margin-bottom:32px;">
+        <div class="section-head" style="margin-top:0;margin-bottom:20px;">
+          <h2 class="section-title" style="font-size:18px;">Listening activity</h2>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:11px;font-family:var(--font-mono);color:var(--text-muted);">Less</span>
+            <div style="width:10px;height:10px;border-radius:2px;background:var(--bg-highlight);"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#1ed9b433;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:#1ed9b488;"></div>
+            <div style="width:10px;height:10px;border-radius:2px;background:var(--accent);"></div>
+            <span style="font-size:11px;font-family:var(--font-mono);color:var(--text-muted);">More</span>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;" id="heatmap"></div>
+        <div style="display:flex;justify-content:space-between;margin-top:8px;padding:0 2px;">
+          ${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d=>`<span style="font-size:10px;font-family:var(--font-mono);color:var(--text-muted);">${d}</span>`).join('')}
+        </div>
+      </div>
+
+      <!-- Recent Activity + Liked Songs -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:32px;">
+
+        <div>
+          <div class="section-head" style="margin-top:0;">
+            <h2 class="section-title" style="font-size:18px;">Recent activity</h2>
+          </div>
+          <div id="activityList"></div>
+        </div>
+
+        <div>
+          <div class="section-head" style="margin-top:0;">
+            <h2 class="section-title" style="font-size:18px;">Liked songs</h2>
+            <button class="show-all-btn" onclick="window.location.href='index.html'">Play all</button>
+          </div>
+          <div id="likedSongs"></div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <div id="playerMount"></div>
+  <div id="bottomNavMount"></div>
+</div>
+
+<div class="modal-overlay" id="createModal" onclick="closeModalBg(event)">
+  <div class="modal-box">
+    <div class="modal-title">Create playlist</div>
+    <input type="text" class="modal-input" id="plNameInput" placeholder="My Playlist #1"/>
+    <div class="modal-acts">
+      <button class="btn-cancel-m" onclick="closeModal()">Cancel</button>
+      <button class="btn-create-m" onclick="closeModal()">Create</button>
+    </div>
+  </div>
+</div>
+
+<script src="scripts/data.js"></script>
+<script src="scripts/layout.js"></script>
+<script src="scripts/player.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('sidebarMount').innerHTML = renderSidebar('profile');
+  document.getElementById('playerMount').innerHTML = renderPlayerBar();
+  document.getElementById('bottomNavMount').innerHTML = renderBottomNav('user');
+
+  const likedTracks = TRACKS.filter(t => t.liked);
+  document.getElementById('likedCount').textContent = likedTracks.length || USER.likedSongs;
+
+  // Top artists
+  const maxPlays = USER.topArtists[0].plays;
+  document.getElementById('topArtistsList').innerHTML = USER.topArtists.map((artist, i) => `
+    <div class="artist-row">
+      <div class="artist-rank">${i+1}</div>
+      <div class="artist-av" style="background:linear-gradient(135deg,${artist.color}44,${artist.color}11);">${artist.emoji}</div>
+      <div class="artist-inf">
+        <div class="artist-n">${artist.name}</div>
+        <div class="artist-cnt">${artist.plays} plays</div>
+        <div class="artist-bar" style="width:${(artist.plays/maxPlays*100)}%;background:${artist.color};"></div>
+      </div>
+    </div>
+  `).join('');
+
+  // Genre breakdown
+  document.getElementById('genreBreakdown').innerHTML = USER.genreBreakdown.map(g => `
+    <div class="genre-row-item">
+      <div class="genre-lbl">${g.genre}</div>
+      <div class="genre-track">
+        <div class="genre-fill" data-target="${g.pct}" style="background:${g.color}; width:0%;"></div>
+      </div>
+      <div class="genre-pct">${g.pct}%</div>
+    </div>
+  `).join('');
+
+  setTimeout(() => {
+    document.querySelectorAll('.genre-fill').forEach(el => {
+      el.style.width = el.dataset.target + '%';
+    });
+  }, 100);
+
+  // Heatmap
+  const levels = ['var(--bg-highlight)', '#1ed9b422', '#1ed9b455', '#1ed9b4aa', 'var(--accent)'];
+  document.getElementById('heatmap').innerHTML = Array.from({ length: 56 }).map(() => {
+    const lvl = Math.floor(Math.random() * 5);
+    const plays = Math.floor(Math.random() * 8);
+    return `<div class="hm-cell" style="background:${levels[lvl]};" title="${plays} tracks played"></div>`;
+  }).join('');
+
+  // Activity
+  document.getElementById('activityList').innerHTML = USER.recentActivity.map(item => `
+    <div class="activity-row">
+      <div class="act-dot" style="background:${item.color};"></div>
+      <div class="act-text">${item.text}</div>
+      <div class="act-time">${item.time}</div>
+    </div>
+  `).join('');
+
+  // Liked Songs
+  if (likedTracks.length === 0) {
+    document.getElementById('likedSongs').innerHTML = `
+      <div style="color:var(--text-muted);font-size:13px;padding:16px 0;">
+        No liked songs yet. Heart a track to save it here.
+      </div>`;
+  } else {
+    document.getElementById('likedSongs').innerHTML = likedTracks.map((track, i) => `
+      <div class="track-row" ondblclick="playLiked(${track.id})" style="grid-template-columns:40px 1fr 52px;">
+        <div class="tr-num-wrap" style="justify-content:center;">
+          <span class="tr-num">${i+1}</span>
+          <span class="tr-play-ico">▶</span>
+        </div>
+        <div class="tr-info">
+          <div class="tr-thumb" style="background:linear-gradient(135deg,${track.color}44,${track.color}11)">${track.emoji}</div>
+          <div>
+            <div class="tr-title">${track.title}</div>
+            <div class="tr-artist">${track.artist}</div>
+          </div>
+        </div>
+        <div class="tr-dur">${track.duration}</div>
+      </div>
+    `).join('');
+  }
+});
+
+function playLiked(trackId) {
+  const liked = TRACKS.filter(t => t.liked);
+  appState.queue = liked;
+  appState.currentTrackIndex = liked.findIndex(t => t.id === trackId);
+  appState.isPlaying = true;
+  saveState();
+  window.location.href = 'index.html';
+}
+
+function openCreateModal() { document.getElementById('createModal').classList.add('open'); }
+function closeModal() { document.getElementById('createModal').classList.remove('open'); }
+function closeModalBg(e) { if(e.target===document.getElementById('createModal')) closeModal(); }
+</script>
+</body>
+</html>
