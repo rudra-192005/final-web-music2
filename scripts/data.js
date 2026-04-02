@@ -156,6 +156,7 @@ const TRACKS = [
     liked: true,
   },
   {
+    {
     id: 12,
     title: "Binary Sunset",
     artist: "SYNTAX ERR",
@@ -185,7 +186,6 @@ const TRACKS = [
     src: "https://bajaao.pendujatt.com.se/load/320/70314451/2138233/Sitaare.mp3",
   },
 ];
-
 const PLAYLISTS = [
   {
     id: 1,
